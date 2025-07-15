@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { TrendingUp, Plus, Settings, Search, Loader2 } from 'lucide-react'
-import { analyzeMultipleUrls, ApiResponse } from '../services/apiService'
+import { analyzeMultipleUrls } from '../services/apiService'
+import { AnalysisResult } from '../services/psiApi'
 import { ResultsTable } from './ResultsTable'
 
 interface SavedUrl {
@@ -18,7 +19,7 @@ export function Dashboard() {
   const [newUrlName, setNewUrlName] = useState('')
   const [newUrlAddress, setNewUrlAddress] = useState('')
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<{ url: string; result: ApiResponse | null; error?: string }[]>([])
+  const [results, setResults] = useState<{ url: string; result: AnalysisResult | null; error?: string }[]>([])
 
   const handleAddUrl = () => {
     if (url.trim() && !urls.includes(url.trim())) {

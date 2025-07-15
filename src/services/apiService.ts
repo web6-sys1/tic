@@ -1,34 +1,16 @@
-const API_BASE_URL = 'https://browserless-production-4a68.up.railway.app'
-const API_TOKEN = 'EkBgrHrYjL6HCZfA2aKpM1L6gKiOsxHErnaEGl3WeBdq7ZUW'
+import { analyzePage, AnalysisResult } from './psiApi'
 
-export interface ApiResponse {
-  [key: string]: any
-}
-
-export async function analyzeUrl(url: string): Promise<ApiResponse> {
+export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   try {
-    const response = await fetch(`${API_BASE_URL}/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_TOKEN}`,
-      },
-      body: JSON.stringify({ url })
-    })
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return data
+    const result = await analyzePage(url)
+    return result
   } catch (error) {
     console.error('API Error:', error)
     throw new Error('Failed to analyze URL. Please check the URL and try again.')
   }
 }
 
-export async function analyzeMultipleUrls(urls: string[]): Promise<{ url: string; result: ApiResponse | null; error?: string }[]> {
+export async function analyzeMultipleUrls(urls: string[]): Promise<{ url: string; result: AnalysisResult | null; error?: string }[]> {
   const results = await Promise.allSettled(
     urls.map(async (url) => {
       try {

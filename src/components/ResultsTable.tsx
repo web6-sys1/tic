@@ -1,10 +1,10 @@
 import React from 'react'
-import { ApiResponse } from '../services/apiService'
+import { AnalysisResult } from '../services/psiApi'
 import { Download, Monitor, Smartphone, Calendar, Globe } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 interface ResultsTableProps {
-  results: { url: string; result: ApiResponse | null; error?: string }[]
+  results: { url: string; result: AnalysisResult | null; error?: string }[]
 }
 
 interface PerformanceMetrics {
@@ -25,73 +25,41 @@ interface PerformanceMetrics {
 }
 
 export function ResultsTable({ results }: ResultsTableProps) {
-  const extractMetrics = (result: ApiResponse, url: string): PerformanceMetrics[] => {
+  const extractMetrics = (result: AnalysisResult, url: string): PerformanceMetrics[] => {
     const metrics: PerformanceMetrics[] = []
     const currentDate = new Date().toLocaleDateString()
     
-    // Handle different possible response structures
-    const mobileData = result.mobile || result.Mobile || (result.strategy === 'mobile' ? result : null)
-    const desktopData = result.desktop || result.Desktop || (result.strategy === 'desktop' ? result : null)
-    
-    // Extract mobile metrics if available
-    if (mobileData) {
-      metrics.push({
-        date: currentDate,
-        device: 'Mobile',
-        websiteName: url,
-        timeToFirstByte: mobileData.timeToFirstByte || mobileData.TTFB || mobileData['Time to First Byte'] || 'N/A',
-        startRender: mobileData.startRender || mobileData['Start Render'] || 'N/A',
-        firstContentfulPaint: mobileData.firstContentfulPaint || mobileData.FCP || mobileData['First Contentful Paint'] || 'N/A',
-        speedIndex: mobileData.speedIndex || mobileData.SI || mobileData['Speed Index'] || 'N/A',
-        largestContentfulPaint: mobileData.largestContentfulPaint || mobileData.LCP || mobileData['Largest Contentful Paint'] || 'N/A',
-        cumulativeLayoutShift: mobileData.cumulativeLayoutShift || mobileData.CLS || mobileData['Cumulative Layout Shift'] || 'N/A',
-        totalBlockingTime: mobileData.totalBlockingTime || mobileData.TBT || mobileData['Total Blocking Time'] || 'N/A',
-        pageWeight: mobileData.pageWeight || mobileData['Page Weight'] || mobileData.weight || 'N/A',
-        interactionToNextPaint: mobileData.interactionToNextPaint || mobileData.INP || mobileData['Interaction to Next Paint'] || 'No Data',
-        totalLoadingFirstView: mobileData.totalLoadingFirstView || mobileData['Total Loading First View'] || 'N/A',
-        difference: 'N/A'
-      })
+    // Extract metrics from AnalysisResult
+    const formatMetricValue = (metric: any) => {
+      if (!metric) return 'N/A'
+      if (typeof metric === 'object' && metric.displayValue) {
+        return metric.displayValue
+      }
+      if (typeof metric === 'number') {
+        return metric.toString()
+      }
+      return metric.toString()
     }
+
+    // Create metrics for the device type (mobile or desktop based on strategy)
+    const device = result.strategy === 'mobile' ? 'Mobile' : 'Desktop'
     
-    // Extract desktop metrics if available
-    if (desktopData) {
-      metrics.push({
-        date: currentDate,
-        device: 'Desktop',
-        websiteName: url,
-        timeToFirstByte: desktopData.timeToFirstByte || desktopData.TTFB || desktopData['Time to First Byte'] || 'N/A',
-        startRender: desktopData.startRender || desktopData['Start Render'] || 'N/A',
-        firstContentfulPaint: desktopData.firstContentfulPaint || desktopData.FCP || desktopData['First Contentful Paint'] || 'N/A',
-        speedIndex: desktopData.speedIndex || desktopData.SI || desktopData['Speed Index'] || 'N/A',
-        largestContentfulPaint: desktopData.largestContentfulPaint || desktopData.LCP || desktopData['Largest Contentful Paint'] || 'N/A',
-        cumulativeLayoutShift: desktopData.cumulativeLayoutShift || desktopData.CLS || desktopData['Cumulative Layout Shift'] || 'N/A',
-        totalBlockingTime: desktopData.totalBlockingTime || desktopData.TBT || desktopData['Total Blocking Time'] || 'N/A',
-        pageWeight: desktopData.pageWeight || desktopData['Page Weight'] || desktopData.weight || 'N/A',
-        interactionToNextPaint: desktopData.interactionToNextPaint || desktopData.INP || desktopData['Interaction to Next Paint'] || 'No Data',
-        totalLoadingFirstView: desktopData.totalLoadingFirstView || desktopData['Total Loading First View'] || 'N/A',
-        difference: 'N/A'
-      })
-    }
-    
-    // If no mobile/desktop specific data, try to extract from root level
-    if (metrics.length === 0 && result) {
-      metrics.push({
-        date: currentDate,
-        device: 'Unknown',
-        websiteName: url,
-        timeToFirstByte: result.timeToFirstByte || result.TTFB || result['Time to First Byte'] || 'N/A',
-        startRender: result.startRender || result['Start Render'] || 'N/A',
-        firstContentfulPaint: result.firstContentfulPaint || result.FCP || result['First Contentful Paint'] || 'N/A',
-        speedIndex: result.speedIndex || result.SI || result['Speed Index'] || 'N/A',
-        largestContentfulPaint: result.largestContentfulPaint || result.LCP || result['Largest Contentful Paint'] || 'N/A',
-        cumulativeLayoutShift: result.cumulativeLayoutShift || result.CLS || result['Cumulative Layout Shift'] || 'N/A',
-        totalBlockingTime: result.totalBlockingTime || result.TBT || result['Total Blocking Time'] || 'N/A',
-        pageWeight: result.pageWeight || result['Page Weight'] || result.weight || 'N/A',
-        interactionToNextPaint: result.interactionToNextPaint || result.INP || result['Interaction to Next Paint'] || 'No Data',
-        totalLoadingFirstView: result.totalLoadingFirstView || result['Total Loading First View'] || 'N/A',
-        difference: 'N/A'
-      })
-    }
+    metrics.push({
+      date: currentDate,
+      device: device,
+      websiteName: url,
+      timeToFirstByte: formatMetricValue(result.metrics.serverResponseTime),
+      startRender: formatMetricValue(result.metrics.firstContentfulPaint),
+      firstContentfulPaint: formatMetricValue(result.metrics.firstContentfulPaint),
+      speedIndex: formatMetricValue(result.metrics.speedIndex),
+      largestContentfulPaint: formatMetricValue(result.metrics.largestContentfulPaint),
+      cumulativeLayoutShift: formatMetricValue(result.metrics.cumulativeLayoutShift),
+      totalBlockingTime: formatMetricValue(result.metrics.totalBlockingTime),
+      pageWeight: 'N/A', // Not available in PSI API
+      interactionToNextPaint: formatMetricValue(result.metrics.interactionToNextPaint) || 'No Data',
+      totalLoadingFirstView: formatMetricValue(result.metrics.totalBlockingTime),
+      difference: 'N/A'
+    })
     
     return metrics
   }
