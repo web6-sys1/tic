@@ -78,7 +78,7 @@ function JsonViewer({ data, level = 0 }: JsonViewerProps) {
             className="flex items-center text-purple-600 hover:text-purple-800"
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <span className="ml-1">{{{keys.length} keys}}</span>
+            <span className="ml-1">{keys.length} keys</span>
           </button>
           {isExpanded && (
             <div className="ml-6 mt-2 border-l-2 border-gray-200 pl-4">
