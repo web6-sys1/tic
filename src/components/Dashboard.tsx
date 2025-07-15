@@ -40,6 +40,7 @@ export function Dashboard() {
       
       try {
         const analysisResults = await analyzeMultipleUrls(currentUrls)
+        console.log('API Response:', analysisResults) // Debug log to see the actual response
         setResults(analysisResults)
         
         // Update the URLs list and clear input

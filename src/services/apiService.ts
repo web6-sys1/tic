@@ -1,5 +1,5 @@
 const API_BASE_URL = 'https://browserless-production-4a68.up.railway.app'
-const API_TOKEN = '1S6xR0cAp4XzJqBa356f2b441b66339e8c96b44a2823854b0'
+const API_TOKEN = 'EkBgrHrYjL6HCZfA2aKpM1L6gKiOsxHErnaEGl3WeBdq7ZUW'
 
 export interface ApiResponse {
   [key: string]: any
