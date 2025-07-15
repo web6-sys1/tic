@@ -1,6 +1,6 @@
 import { PSIResponse, AnalysisResult } from '../types/psi'
 
-const PSI_API_KEY = 'AIzaSyBwJY8zKj8Q9X8X8X8X8X8X8X8X8X8X8X8' // You'll need to replace this with your actual API key
+const PSI_API_KEY = 'EkBgrHrYjL6HCZfA2aKpM1L6gKiOsxHErnaEGl3WeBdq7ZUW' // You'll need to replace this with your actual API key
 const PSI_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
 export async function analyzePage(url: string, strategy: 'mobile' | 'desktop' = 'mobile'): Promise<AnalysisResult> {
