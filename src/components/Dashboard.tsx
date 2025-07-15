@@ -28,13 +28,23 @@ export function Dashboard() {
   }
 
   const handleAnalyze = async () => {
-    if (urls.length > 0) {
+    // Add current URL to list if it exists and isn't already added
+    const currentUrls = [...urls]
+    if (url.trim() && !currentUrls.includes(url.trim())) {
+      currentUrls.push(url.trim())
+    }
+    
+    if (currentUrls.length > 0) {
       setLoading(true)
       setResults([])
       
       try {
-        const analysisResults = await analyzeMultipleUrls(urls)
+        const analysisResults = await analyzeMultipleUrls(currentUrls)
         setResults(analysisResults)
+        
+        // Update the URLs list and clear input
+        setUrls(currentUrls)
+        setUrl('')
       } catch (error) {
         console.error('Analysis failed:', error)
       } finally {
@@ -250,7 +260,7 @@ export function Dashboard() {
           {/* Analyze Button */}
           <button
             onClick={handleAnalyze}
-            disabled={urls.length === 0 || loading}
+            disabled={(urls.length === 0 && !url.trim()) || loading}
             className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
           >
             {loading ? (
@@ -261,7 +271,7 @@ export function Dashboard() {
             ) : (
               <>
                 <TrendingUp className="w-5 h-5 mr-2" />
-                Analyze {urls.length} URL{urls.length !== 1 ? 's' : ''}
+                Analyze {url.trim() && !urls.includes(url.trim()) ? urls.length + 1 : urls.length} URL{(url.trim() && !urls.includes(url.trim()) ? urls.length + 1 : urls.length) !== 1 ? 's' : ''}
               </>
             )}
           </button>
