@@ -1,235 +1,307 @@
 import React from 'react'
 import { ApiResponse } from '../services/apiService'
-import { ChevronDown, ChevronRight, ExternalLink, AlertCircle, CheckCircle } from 'lucide-react'
+import { Download, Monitor, Smartphone, Calendar, Globe } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface ResultsTableProps {
   results: { url: string; result: ApiResponse | null; error?: string }[]
 }
 
-interface JsonViewerProps {
-  data: any
-  level?: number
-}
-
-function JsonViewer({ data, level = 0 }: JsonViewerProps) {
-  const [expandedKeys, setExpandedKeys] = React.useState<Set<string>>(new Set())
-
-  const toggleExpanded = (key: string) => {
-    const newExpanded = new Set(expandedKeys)
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key)
-    } else {
-      newExpanded.add(key)
-    }
-    setExpandedKeys(newExpanded)
-  }
-
-  const renderValue = (key: string, value: any, path: string) => {
-    const isExpanded = expandedKeys.has(path)
-
-    if (value === null) {
-      return <span className="text-gray-500">null</span>
-    }
-
-    if (typeof value === 'boolean') {
-      return <span className={value ? 'text-green-600' : 'text-red-600'}>{value.toString()}</span>
-    }
-
-    if (typeof value === 'number') {
-      return <span className="text-blue-600">{value}</span>
-    }
-
-    if (typeof value === 'string') {
-      return <span className="text-green-700">"{value}"</span>
-    }
-
-    if (Array.isArray(value)) {
-      return (
-        <div>
-          <button
-            onClick={() => toggleExpanded(path)}
-            className="flex items-center text-purple-600 hover:text-purple-800"
-          >
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <span className="ml-1">[{value.length} items]</span>
-          </button>
-          {isExpanded && (
-            <div className="ml-6 mt-2 border-l-2 border-gray-200 pl-4">
-              {value.map((item, index) => (
-                <div key={index} className="mb-2">
-                  <span className="text-gray-600 font-mono">[{index}]:</span>
-                  <div className="ml-4">
-                    {renderValue(`${index}`, item, `${path}.${index}`)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    if (typeof value === 'object') {
-      const keys = Object.keys(value)
-      return (
-        <div>
-          <button
-            onClick={() => toggleExpanded(path)}
-            className="flex items-center text-purple-600 hover:text-purple-800"
-          >
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <span className="ml-1">{keys.length} keys</span>
-          </button>
-          {isExpanded && (
-            <div className="ml-6 mt-2 border-l-2 border-gray-200 pl-4">
-              {keys.map((objKey) => (
-                <div key={objKey} className="mb-2">
-                  <span className="text-blue-800 font-mono">"{objKey}":</span>
-                  <div className="ml-4">
-                    {renderValue(objKey, value[objKey], `${path}.${objKey}`)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    return <span>{String(value)}</span>
-  }
-
-  return (
-    <div className="font-mono text-sm">
-      {typeof data === 'object' && data !== null ? (
-        Object.keys(data).map((key) => (
-          <div key={key} className="mb-3">
-            <span className="text-blue-800 font-semibold">"{key}":</span>
-            <div className="ml-4">
-              {renderValue(key, data[key], key)}
-            </div>
-          </div>
-        ))
-      ) : (
-        renderValue('root', data, 'root')
-      )}
-    </div>
-  )
+interface PerformanceMetrics {
+  date: string
+  device: string
+  websiteName: string
+  timeToFirstByte: string
+  startRender: string
+  firstContentfulPaint: string
+  speedIndex: string
+  largestContentfulPaint: string
+  cumulativeLayoutShift: string
+  totalBlockingTime: string
+  pageWeight: string
+  interactionToNextPaint: string
+  totalLoadingFirstView: string
+  difference: string
 }
 
 export function ResultsTable({ results }: ResultsTableProps) {
-  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set())
-
-  const toggleRowExpanded = (index: number) => {
-    const newExpanded = new Set(expandedRows)
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index)
-    } else {
-      newExpanded.add(index)
+  const extractMetrics = (result: ApiResponse, url: string): PerformanceMetrics[] => {
+    const metrics: PerformanceMetrics[] = []
+    const currentDate = new Date().toLocaleDateString()
+    
+    // Extract mobile metrics if available
+    if (result.mobile) {
+      metrics.push({
+        date: currentDate,
+        device: 'Mobile',
+        websiteName: url,
+        timeToFirstByte: result.mobile.timeToFirstByte || 'N/A',
+        startRender: result.mobile.startRender || 'N/A',
+        firstContentfulPaint: result.mobile.firstContentfulPaint || 'N/A',
+        speedIndex: result.mobile.speedIndex || 'N/A',
+        largestContentfulPaint: result.mobile.largestContentfulPaint || 'N/A',
+        cumulativeLayoutShift: result.mobile.cumulativeLayoutShift || 'N/A',
+        totalBlockingTime: result.mobile.totalBlockingTime || 'N/A',
+        pageWeight: result.mobile.pageWeight || 'N/A',
+        interactionToNextPaint: result.mobile.interactionToNextPaint || 'No Data',
+        totalLoadingFirstView: result.mobile.totalLoadingFirstView || 'N/A',
+        difference: 'N/A'
+      })
     }
-    setExpandedRows(newExpanded)
+    
+    // Extract desktop metrics if available
+    if (result.desktop) {
+      metrics.push({
+        date: currentDate,
+        device: 'Desktop',
+        websiteName: url,
+        timeToFirstByte: result.desktop.timeToFirstByte || 'N/A',
+        startRender: result.desktop.startRender || 'N/A',
+        firstContentfulPaint: result.desktop.firstContentfulPaint || 'N/A',
+        speedIndex: result.desktop.speedIndex || 'N/A',
+        largestContentfulPaint: result.desktop.largestContentfulPaint || 'N/A',
+        cumulativeLayoutShift: result.desktop.cumulativeLayoutShift || 'N/A',
+        totalBlockingTime: result.desktop.totalBlockingTime || 'N/A',
+        pageWeight: result.desktop.pageWeight || 'N/A',
+        interactionToNextPaint: result.desktop.interactionToNextPaint || 'No Data',
+        totalLoadingFirstView: result.desktop.totalLoadingFirstView || 'N/A',
+        difference: 'N/A'
+      })
+    }
+    
+    return metrics
+  }
+
+  const getAllMetrics = (): PerformanceMetrics[] => {
+    const allMetrics: PerformanceMetrics[] = []
+    
+    results.forEach(result => {
+      if (result.result && !result.error) {
+        const metrics = extractMetrics(result.result, result.url)
+        allMetrics.push(...metrics)
+      }
+    })
+    
+    return allMetrics
+  }
+
+  const exportToExcel = () => {
+    const allMetrics = getAllMetrics()
+    
+    if (allMetrics.length === 0) {
+      alert('No data available to export')
+      return
+    }
+
+    // Create worksheet data with proper headers
+    const worksheetData = [
+      [
+        'Date',
+        'Device',
+        'Website Name',
+        'Time to First Byte',
+        'Start Render',
+        'First Contentful Paint',
+        'Speed Index',
+        'Largest Contentful Paint',
+        'Cumulative Layout Shift',
+        'Total Blocking Time',
+        'Page Weight',
+        'Interaction to Next Paint (INP)',
+        'Total Loading First View',
+        'Difference (Previous - Current)'
+      ],
+      ...allMetrics.map(metric => [
+        metric.date,
+        metric.device,
+        metric.websiteName,
+        metric.timeToFirstByte,
+        metric.startRender,
+        metric.firstContentfulPaint,
+        metric.speedIndex,
+        metric.largestContentfulPaint,
+        metric.cumulativeLayoutShift,
+        metric.totalBlockingTime,
+        metric.pageWeight,
+        metric.interactionToNextPaint,
+        metric.totalLoadingFirstView,
+        metric.difference
+      ])
+    ]
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Performance Analysis')
+    
+    // Generate filename with current date
+    const filename = `performance-analysis-${new Date().toISOString().split('T')[0]}.xlsx`
+    XLSX.writeFile(workbook, filename)
+  }
+
+  const getMetricColor = (value: string, thresholds: { good: number; poor: number }) => {
+    const numValue = parseFloat(value)
+    if (isNaN(numValue)) return 'bg-gray-100'
+    
+    if (numValue <= thresholds.good) return 'bg-green-100 text-green-800'
+    if (numValue <= thresholds.poor) return 'bg-yellow-100 text-yellow-800'
+    return 'bg-red-100 text-red-800'
+  }
+
+  const getThresholds = (metric: string) => {
+    const thresholds: Record<string, { good: number; poor: number }> = {
+      timeToFirstByte: { good: 0.2, poor: 0.6 },
+      startRender: { good: 1.5, poor: 3.0 },
+      firstContentfulPaint: { good: 1.8, poor: 3.0 },
+      speedIndex: { good: 3.4, poor: 5.8 },
+      largestContentfulPaint: { good: 2.5, poor: 4.0 },
+      cumulativeLayoutShift: { good: 0.1, poor: 0.25 },
+      totalBlockingTime: { good: 0.2, poor: 0.6 }
+    }
+    return thresholds[metric] || { good: 1, poor: 3 }
   }
 
   if (results.length === 0) {
     return null
   }
 
+  const allMetrics = getAllMetrics()
+  const mobileMetrics = allMetrics.filter(m => m.device === 'Mobile')
+  const desktopMetrics = allMetrics.filter(m => m.device === 'Desktop')
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Analysis Results</h2>
-      
-      <div className="overflow-hidden border border-gray-200 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                URL
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {results.map((result, index) => (
-              <React.Fragment key={index}>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <ExternalLink className="w-4 h-4 text-gray-400 mr-2" />
-                      <a
-                        href={result.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 font-medium break-all"
-                      >
-                        {result.url}
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {result.error ? (
-                      <div className="flex items-center text-red-600">
-                        <AlertCircle className="w-4 h-4 mr-2" />
-                        <span className="text-sm">Error</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-green-600">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        <span className="text-sm">Success</span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleRowExpanded(index)}
-                      className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      {expandedRows.has(index) ? (
-                        <>
-                          <ChevronDown className="w-4 h-4 mr-1" />
-                          Hide Details
-                        </>
-                      ) : (
-                        <>
-                          <ChevronRight className="w-4 h-4 mr-1" />
-                          View Details
-                        </>
-                      )}
-                    </button>
-                  </td>
-                </tr>
-                {expandedRows.has(index) && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-4 bg-gray-50">
-                      <div className="max-h-96 overflow-auto">
-                        {result.error ? (
-                          <div className="text-red-600 bg-red-50 p-4 rounded-lg border border-red-200">
-                            <h4 className="font-semibold mb-2">Error Details:</h4>
-                            <p>{result.error}</p>
-                          </div>
-                        ) : result.result ? (
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-semibold mb-4 text-gray-900">JSON Response:</h4>
-                            <JsonViewer data={result.result} />
-                          </div>
-                        ) : (
-                          <div className="text-gray-500 p-4">
-                            No data available
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">Analysis Results</h2>
+        {allMetrics.length > 0 && (
+          <button
+            onClick={exportToExcel}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Result
+          </button>
+        )}
       </div>
+
+      {allMetrics.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <Globe className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No performance data available. Please run an analysis first.</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Performance Analysis Results Header */}
+          <div className="bg-blue-600 text-white p-4 rounded-lg">
+            <h3 className="text-lg font-semibold">Performance Analysis Results</h3>
+          </div>
+
+          {/* Mobile Performance Metrics */}
+          {mobileMetrics.length > 0 && (
+            <div>
+              <div className="flex items-center mb-4">
+                <Smartphone className="w-5 h-5 text-blue-600 mr-2" />
+                <h4 className="text-lg font-semibold text-gray-900">Mobile Performance Metrics</h4>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Device</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Website Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Time to First Byte</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Start Render</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">First Contentful Paint</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Speed Index</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Largest Contentful Paint</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Cumulative Layout Shift</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Total Blocking Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Page Weight</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Interaction to Next Paint (INP)</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Total Loading First View</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Difference</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {mobileMetrics.map((metric, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.date}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.device}</td>
+                        <td className="px-4 py-3 text-sm text-blue-600 border-r break-all max-w-xs">{metric.websiteName}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.timeToFirstByte, getThresholds('timeToFirstByte'))}`}>{metric.timeToFirstByte}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.startRender, getThresholds('startRender'))}`}>{metric.startRender}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.firstContentfulPaint, getThresholds('firstContentfulPaint'))}`}>{metric.firstContentfulPaint}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.speedIndex, getThresholds('speedIndex'))}`}>{metric.speedIndex}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.largestContentfulPaint, getThresholds('largestContentfulPaint'))}`}>{metric.largestContentfulPaint}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.cumulativeLayoutShift, getThresholds('cumulativeLayoutShift'))}`}>{metric.cumulativeLayoutShift}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.totalBlockingTime, getThresholds('totalBlockingTime'))}`}>{metric.totalBlockingTime}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.pageWeight}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.interactionToNextPaint}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.totalLoadingFirstView}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{metric.difference}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Performance Metrics */}
+          {desktopMetrics.length > 0 && (
+            <div>
+              <div className="flex items-center mb-4">
+                <Monitor className="w-5 h-5 text-blue-600 mr-2" />
+                <h4 className="text-lg font-semibold text-gray-900">Desktop Performance Metrics</h4>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Device</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Website Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Time to First Byte</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Start Render</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">First Contentful Paint</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Speed Index</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Largest Contentful Paint</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Cumulative Layout Shift</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Total Blocking Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Page Weight</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Interaction to Next Paint (INP)</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r">Total Loading First View</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Difference</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {desktopMetrics.map((metric, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.date}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.device}</td>
+                        <td className="px-4 py-3 text-sm text-blue-600 border-r break-all max-w-xs">{metric.websiteName}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.timeToFirstByte, getThresholds('timeToFirstByte'))}`}>{metric.timeToFirstByte}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.startRender, getThresholds('startRender'))}`}>{metric.startRender}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.firstContentfulPaint, getThresholds('firstContentfulPaint'))}`}>{metric.firstContentfulPaint}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.speedIndex, getThresholds('speedIndex'))}`}>{metric.speedIndex}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.largestContentfulPaint, getThresholds('largestContentfulPaint'))}`}>{metric.largestContentfulPaint}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.cumulativeLayoutShift, getThresholds('cumulativeLayoutShift'))}`}>{metric.cumulativeLayoutShift}</td>
+                        <td className={`px-4 py-3 text-sm border-r ${getMetricColor(metric.totalBlockingTime, getThresholds('totalBlockingTime'))}`}>{metric.totalBlockingTime}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.pageWeight}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.interactionToNextPaint}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 border-r">{metric.totalLoadingFirstView}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{metric.difference}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
