@@ -30,6 +30,7 @@ export function PageSpeedApp({ user }: PageSpeedAppProps) {
   const [importedUrls, setImportedUrls] = useState<SavedUrl[]>([])
   const [autoSave, setAutoSave] = useState(true)
   const [importFile, setImportFile] = useState<File | null>(null)
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -165,7 +166,11 @@ export function PageSpeedApp({ user }: PageSpeedAppProps) {
         }
       } catch (error) {
         console.error('Error parsing file:', error)
-        alert('Error parsing file. Please check the file format.')
+        setNotification({
+          message: 'Error parsing file. Please check the file format.',
+          type: 'error'
+        })
+        setTimeout(() => setNotification(null), 5000)
       }
     }
 
@@ -186,7 +191,13 @@ export function PageSpeedApp({ user }: PageSpeedAppProps) {
     setImportedUrls([])
     setImportFile(null)
     
-    alert(`Successfully imported ${newUrls.length} URLs (${urlsToSave.length - newUrls.length} duplicates skipped)`)
+    setNotification({
+      message: `Successfully imported ${newUrls.length} URLs (${urlsToSave.length - newUrls.length} duplicates skipped)`,
+      type: 'success'
+    })
+    
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => setNotification(null), 5000)
   }
 
   const handleCancelImport = () => {
@@ -220,6 +231,27 @@ export function PageSpeedApp({ user }: PageSpeedAppProps) {
           </div>
         </div>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-6 py-4 rounded-lg shadow-lg ${
+            notification.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span>{notification.message}</span>
+              <button
+                onClick={() => setNotification(null)}
+                className="ml-4 text-white hover:text-gray-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="py-8">
