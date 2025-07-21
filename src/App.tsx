@@ -1,33 +1,32 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { SignInForm } from './components/SignInForm'
+import { PageSpeedApp } from './components/PageSpeedApp'
 import { useAuth } from './hooks/useAuth'
-import { LoginForm } from './components/LoginForm'
-import { Header } from './components/Header'
-import { Dashboard } from './components/Dashboard'
-import { Loader2, AlertCircle } from 'lucide-react'
 
 function App() {
   const { user, loading } = useAuth()
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
-  if (!user) {
-    return <LoginForm />
+  if (user) {
+    return <PageSpeedApp user={user} />
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <Dashboard />
-    </div>
+    <SignInForm 
+      onSuccess={(user) => {
+        console.log('Sign in successful:', user)
+      }}
+      onError={(error) => {
+        console.error('Sign in error:', error)
+      }}
+    />
   )
 }
 
