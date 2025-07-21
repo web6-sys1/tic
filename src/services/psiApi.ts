@@ -1,11 +1,7 @@
 import { PSIResponse, AnalysisResult } from '../types/psi'
 
-const PSI_API_KEY = import.meta.env.VITE_PSI_API_KEY
+const PSI_API_KEY = 'EkBgrHrYjL6HCZfA2aKpM1L6gKiOsxHErnaEGl3WeBdq7ZUW' // You'll need to replace this with your actual API key
 const PSI_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
-
-if (!PSI_API_KEY) {
-  throw new Error('Missing Google PageSpeed Insights API key. Please set VITE_PSI_API_KEY in your .env file.')
-}
 
 export async function analyzePage(url: string, strategy: 'mobile' | 'desktop' = 'mobile'): Promise<AnalysisResult> {
   const apiUrl = `${PSI_API_URL}?url=${encodeURIComponent(url)}&key=${PSI_API_KEY}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`
