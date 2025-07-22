@@ -121,6 +121,23 @@ export function Dashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Website URLs to Analyze</h2>
             <div className="flex space-x-3">
               <button 
+                onClick={handleAnalyze}
+                disabled={(urls.length === 0 && !url.trim()) || loading}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Analyze
+                  </>
+                )}
+              </button>
+              <button 
                 onClick={() => setShowManageUrls(!showManageUrls)}
                 className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
