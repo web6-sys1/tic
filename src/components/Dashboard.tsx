@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { TrendingUp, Plus, Settings, Search, Loader2 } from 'lucide-react'
+import { TrendingUp, Plus, Settings, Search, Loader2, Upload } from 'lucide-react'
 import { analyzeMultipleUrls } from '../services/apiService'
 import { AnalysisResult } from '../services/psiApi'
 import { ResultsTable } from './ResultsTable'
+import * as XLSX from 'xlsx'
 
 interface SavedUrl {
   id: string
@@ -20,6 +21,70 @@ export function Dashboard() {
   const [newUrlAddress, setNewUrlAddress] = useState('')
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<{ url: string; result: AnalysisResult | null; error?: string }[]>([])
+
+  const handleImportExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[sheetName]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][]
+
+        // Skip header row and process data
+        const importedUrls: SavedUrl[] = []
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i]
+          if (row && row.length >= 2 && row[0] && row[1]) {
+            const urlName = row[0].toString().trim()
+            const urlAddress = row[1].toString().trim()
+            
+            if (urlName && urlAddress) {
+              importedUrls.push({
+                id: `imported-${Date.now()}-${i}`,
+                name: urlName,
+                url: urlAddress,
+                selected: false
+              })
+            }
+          }
+        }
+
+        if (importedUrls.length > 0) {
+          setSavedUrls(prev => [...prev, ...importedUrls])
+          alert(`Successfully imported ${importedUrls.length} URLs`)
+        } else {
+          alert('No valid URLs found in the Excel file. Please ensure the file has "URL Name" in column A and "URL" in column B.')
+        }
+      } catch (error) {
+        console.error('Error reading Excel file:', error)
+        alert('Error reading Excel file. Please make sure it\'s a valid Excel file.')
+      }
+    }
+    reader.readAsArrayBuffer(file)
+    
+    // Reset the input value so the same file can be selected again
+    event.target.value = ''
+  }
+
+  const downloadTemplate = () => {
+    const templateData = [
+      ['URL Name', 'URL'],
+      ['Example Website 1', 'https://example1.com'],
+      ['Example Website 2', 'https://example2.com'],
+      ['My Blog', 'https://myblog.com']
+    ]
+
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'URL Template')
+    
+    XLSX.writeFile(workbook, 'url-import-template.xlsx')
+  }
 
   const handleAddUrl = () => {
     if (url.trim() && !urls.includes(url.trim())) {
@@ -144,6 +209,21 @@ export function Dashboard() {
                 <Settings className="w-4 h-4 mr-2" />
                 Manage URLs
               </button>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleImportExcel}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  id="excel-import"
+                />
+                <button 
+                  className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Excel
+                </button>
+              </div>
               <button 
                 onClick={handleAddUrl}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -185,6 +265,17 @@ export function Dashboard() {
               {/* Add New URL Form */}
               <div className="mb-6">
                 <h4 className="text-md font-medium text-gray-800 mb-3">Add New URL</h4>
+                <div className="mb-3">
+                  <button
+                    onClick={downloadTemplate}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Download Excel Template
+                  </button>
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Use this template to import bulk URLs)
+                  </span>
+                </div>
                 <div className="flex space-x-3">
                   <input
                     type="text"
