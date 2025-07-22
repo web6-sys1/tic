@@ -265,36 +265,49 @@ export function Dashboard() {
               {/* Add New URL Form */}
               <div className="mb-6">
                 <h4 className="text-md font-medium text-gray-800 mb-3">Add New URL</h4>
-                <div className="mb-4">
+                
+                {/* Excel Import Section */}
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between mb-3">
                     <div>
+                      <h5 className="font-medium text-gray-800 mb-1">Bulk Import from Excel</h5>
+                      <p className="text-sm text-gray-600">Upload an Excel file with URL names and URLs</p>
+                    </div>
+                    <div className="flex space-x-3">
                       <button
                         onClick={downloadTemplate}
-                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                       >
-                        Download Excel Template
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Template
                       </button>
-                      <span className="text-sm text-gray-500 ml-2">
-                        (Use this template to import bulk URLs)
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept=".xlsx,.xls"
-                        onChange={handleImportExcel}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        id="excel-import-bulk"
-                      />
-                      <button 
-                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Import Excel
-                      </button>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept=".xlsx,.xls"
+                          onChange={handleImportExcel}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          id="excel-import-bulk"
+                        />
+                        <button 
+                          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Import Excel
+                        </button>
+                      </div>
                     </div>
                   </div>
+                  <div className="text-sm text-gray-600">
+                    <p className="font-medium mb-1">Excel Format:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Column A: URL Name (e.g., "My Website", "Company Blog")</li>
+                      <li>Column B: URL (e.g., "https://example.com")</li>
+                      <li>First row can be headers (will be skipped automatically)</li>
+                    </ul>
+                  </div>
                 </div>
+
                 <div className="flex space-x-3 mb-4">
                   <input
                     type="text"
@@ -317,15 +330,6 @@ export function Dashboard() {
                   >
                     Save URL
                   </button>
-                </div>
-                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                  <p className="font-medium mb-1">Excel Import Instructions:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Column A: URL Name (e.g., "My Website", "Company Blog")</li>
-                    <li>Column B: URL (e.g., "https://example.com")</li>
-                    <li>First row can be headers (will be skipped automatically)</li>
-                    <li>Download the template above for the correct format</li>
-                  </ul>
                 </div>
               </div>
 
