@@ -328,40 +328,6 @@ export function Dashboard() {
                   </ul>
                 </div>
               </div>
-                  <button
-                    onClick={downloadTemplate}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Download Excel Template
-                  </button>
-                  <span className="text-sm text-gray-500 ml-2">
-                    (Use this template to import bulk URLs)
-                  </span>
-                </div>
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
-                    value={newUrlName}
-                    onChange={(e) => setNewUrlName(e.target.value)}
-                    placeholder="URL Name (e.g., My Website)"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    value={newUrlAddress}
-                    onChange={(e) => setNewUrlAddress(e.target.value)}
-                    placeholder="https://example.com"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={handleSaveUrl}
-                    disabled={!newUrlName.trim() || !newUrlAddress.trim()}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Save URL
-                  </button>
-                </div>
-              </div>
 
               {/* Saved URLs List */}
               <div className="min-h-[100px] flex items-center justify-center">
