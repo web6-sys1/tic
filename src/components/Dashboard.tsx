@@ -265,7 +265,69 @@ export function Dashboard() {
               {/* Add New URL Form */}
               <div className="mb-6">
                 <h4 className="text-md font-medium text-gray-800 mb-3">Add New URL</h4>
-                <div className="mb-3">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <button
+                        onClick={downloadTemplate}
+                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Download Excel Template
+                      </button>
+                      <span className="text-sm text-gray-500 ml-2">
+                        (Use this template to import bulk URLs)
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleImportExcel}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="excel-import-bulk"
+                      />
+                      <button 
+                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Import Excel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-3 mb-4">
+                  <input
+                    type="text"
+                    value={newUrlName}
+                    onChange={(e) => setNewUrlName(e.target.value)}
+                    placeholder="URL Name (e.g., My Website)"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={newUrlAddress}
+                    onChange={(e) => setNewUrlAddress(e.target.value)}
+                    placeholder="https://example.com"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleSaveUrl}
+                    disabled={!newUrlName.trim() || !newUrlAddress.trim()}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Save URL
+                  </button>
+                </div>
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <p className="font-medium mb-1">Excel Import Instructions:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Column A: URL Name (e.g., "My Website", "Company Blog")</li>
+                    <li>Column B: URL (e.g., "https://example.com")</li>
+                    <li>First row can be headers (will be skipped automatically)</li>
+                    <li>Download the template above for the correct format</li>
+                  </ul>
+                </div>
+              </div>
                   <button
                     onClick={downloadTemplate}
                     className="text-sm text-blue-600 hover:text-blue-800 underline"
